@@ -2,21 +2,23 @@
 
 declare(strict_types=1);
 
+use JetBrains\PhpStorm\Pure;
+
 class TwoOpt implements Strategy
 {
-    public function run(array $cities): array
+    public function run(CityList $cities): CityList
     {
-        $cities[] = $cities[0];
-        $result = $this->runProcess($cities);
-        return $this->format($result);
+        $cities->add($cities->first());
+        return $this->runProcess($cities);
     }
 
-    private function runProcess(array $cities): array
+    private function runProcess(CityList $cities): CityList
     {
-        $beforeCost = $this->getTotalCost($cities);
+        $beforeCost = $cities->getTotalCost();
 
         $exChangeList = $this->makeExchangeList($cities);
 
+        $cities = $cities->toArray();
         foreach ($exChangeList as [$first, $second]) {
             $subsets = [];
             foreach ($cities as $key => $city) {
@@ -30,18 +32,20 @@ class TwoOpt implements Strategy
             }
             krsort($subsets[1]);
             $result = array_merge($subsets[0], $subsets[1], $subsets[2]);
-            $exChangeCost = $this->getTotalCost($result);
+            $result = new CityList(...$result);
+            $exChangeCost = $result->getTotalCost();
             if ((int)$exChangeCost < (int)$beforeCost) {
                 return $this->runProcess($result);
             }
         }
 
-        return $cities;
+        return new CityList(...$cities);
     }
 
-    public function makeExchangeList(array $cities): array
+    #[Pure]
+    private function makeExchangeList(CityList $cities): array
     {
-        $cityCount = count($cities);
+        $cityCount = $cities->count();
 
         $list = [];
         for ($first = 0; $first < $cityCount; $first++) {
@@ -51,37 +55,5 @@ class TwoOpt implements Strategy
         }
 
         return $list;
-    }
-
-    private function getTotalCost(array $cities): float
-    {
-        /** @var City[] $cities */
-        $total = 0;
-
-        $count = count($cities);
-        for ($now = 0; $now < $count - 1; $now++) {
-            $total += $cities[$now]->distance($cities[$now + 1]);
-        }
-
-        return $total;
-    }
-
-    private function format(array $cities): array
-    {
-        $result = [];
-        $result[] = [
-            'city' => array_shift($cities),
-            'distance' => 0,
-        ];
-        $before = 0;
-
-        foreach ($cities as $city) {
-            $result[] = [
-                'city' => $city,
-                'distance' => $city->distance($result[$before++]['city']),
-            ];
-        }
-
-        return $result;
     }
 }

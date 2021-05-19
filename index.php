@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/Strategy.php';
 require_once __DIR__ . '/City.php';
+require_once __DIR__ . '/CityList.php';
 require_once __DIR__ . '/Greedy.php';
 require_once __DIR__ . '/TwoOpt.php';
 require_once __DIR__ . '/RandomInsertion.php';
-require_once __DIR__ . '/BB.php';
 
 $points = getCities();
 
@@ -15,29 +15,23 @@ $cities = [];
 foreach ($points as $point) {
     $cities[] = new City(...$point);
 }
+$cities = new CityList(...$cities);
 
 $strategies = [
     new Greedy(),
     new TwoOpt(),
     new RandomInsertion(),
-    new BB(),
 ];
 
-//$strategy = getStrategy();
 foreach ($strategies as $strategy) {
-    $result = $strategy->run($cities);
-    output($result);
+    $cityList = clone $cities;
+    $result = $strategy->run($cityList);
+
+    echo get_class($strategy) . PHP_EOL;
+    echo $result . PHP_EOL;
+    echo "sum: {$result->getTotalCost()}" . PHP_EOL;
     echo '--------------------------------------------' . PHP_EOL;
 }
-
-function output(array $result): void
-{
-    foreach ($result as $value) {
-        echo "{$value['city']}: {$value['distance']}" . PHP_EOL;
-    }
-    echo "sum: " . array_sum(array_column($result, 'distance')) . PHP_EOL;
-}
-
 
 /**
  * @return int[][]

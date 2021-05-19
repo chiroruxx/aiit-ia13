@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 class RandomInsertion implements Strategy
 {
-    public function run(array $cities): array
+    public function run(CityList $cities): CityList
     {
+        $cities = $cities->toArray();
+
         $routes = [];
         $routes[] = array_shift($cities);
 
@@ -46,25 +48,6 @@ class RandomInsertion implements Strategy
 
         $routes[] = $routes[0];
 
-        return $this->format($routes);
-    }
-
-    private function format(array $cities): array
-    {
-        $result = [];
-        $result[] = [
-            'city' => array_shift($cities),
-            'distance' => 0,
-        ];
-        $before = 0;
-
-        foreach ($cities as $city) {
-            $result[] = [
-                'city' => $city,
-                'distance' => $city->distance($result[$before++]['city']),
-            ];
-        }
-
-        return $result;
+        return new CityList(...$routes);
     }
 }
